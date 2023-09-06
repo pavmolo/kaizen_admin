@@ -39,16 +39,23 @@ data_types = {
     "Дробное число 📊": "FLOAT"
 }
 
-# Используем виджеты Streamlit для создания структуры таблицы
-field_count = st.number_input("Количество полей", min_value=1, max_value=10, value=1)
+# Имитация таблицы
+st.write("Имитация таблицы:")
+columns = st.beta_columns(2)
 fields = []
 
-for i in range(field_count):
-    st.subheader(f"Поле {i+1}")
-    field_name = st.text_input(f"Имя поля {i+1}", key=f"field_name_{i}")
-    field_type = st.selectbox(f"Тип поля {i+1}", list(data_types.keys()), key=f"field_type_{i}")
+# Добавление столбцов
+add_column = st.button("Добавить столбец")
+if add_column:
+    field_name = columns[0].text_input(f"Имя поля", key=f"field_name")
+    field_type = columns[1].selectbox(f"Тип поля", list(data_types.keys()), key=f"field_type")
     fields.append((field_name, data_types[field_type]))
 
+# Отображение имитации таблицы
+for field in fields:
+    st.write(f"{field[0]} ({field[1]})")
+
+# Создание таблицы
 if st.button("Создать таблицу"):
     create_table(table_name, fields)
     st.success(f"Таблица {table_name} успешно создана!")
