@@ -33,27 +33,44 @@ def create_table(table_name, fields, primary_key):
             cursor.execute(sql)
             conn.commit()
 def view_tables_page():
-    st.title("Просмотр таблиц")
+    st.title("Просмотр таблиц базы данных")
 
     # Получение списка таблиц
     tables = get_tables()
-    selected_table = st.selectbox("Выберите таблицу:", tables)
 
-    if selected_table:
-        # Получение данных из выбранной таблицы
-        data = get_table_data(selected_table)
+    for table_name in tables:
+        st.subheader(f"Таблица: {table_name}")
 
-        # Предположим, что первый столбец является ключевым (вы можете изменить это, если у вас другая структура)
-        key_column = data.columns[0]
+        # Получение данных из таблицы
+        data = get_table_data(table_name)
 
-        # Добавьте иконку ключа к ключевому столбцу
-        data = data.rename(columns={key_column: f"🔑 {key_column}"})
+        # Определение ключевого столбца
+        key_column = get_primary_key(table_name)
+
+        # Если ключевой столбец найден, добавьте иконку ключа к нему
+        if key_column and key_column in data.columns:
+            data = data.rename(columns={key_column: f"🔑 {key_column}"})
 
         # Выведите обновленный DataFrame в Streamlit
         st.dataframe(data)
+        st.write("---")  # Разделитель между таблицами
 
 
 st.title("Управление базой данных")
+
+def get_primary_key(table_name):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"""
+                SELECT a.attname
+                FROM   pg_index i
+                JOIN   pg_attribute a ON a.attrelid = i.indrelid
+                                     AND a.attnum = ANY(i.indkey)
+                WHERE  i.indrelid = '{table_name}'::regclass
+                AND    i.indisprimary;
+            """)
+            result = cursor.fetchone()
+            return result[0] if result else None
 def create_table_page():
     # Создание новой таблицы
     st.subheader("Создание новой таблицы")
