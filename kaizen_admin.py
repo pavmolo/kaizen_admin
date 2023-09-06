@@ -20,6 +20,10 @@ def get_tables():
         with conn.cursor() as cursor:
             cursor.execute(f"SELECT tablename FROM pg_tables WHERE schemaname='public';")
             return [row[0] for row in cursor.fetchall()]
+def get_table_data(table_name):
+    """Получение данных из указанной таблицы."""
+    with get_connection() as conn:
+        return pd.read_sql(f"SELECT * FROM {table_name};", conn)
 def create_table(table_name, fields, primary_key):
     """Создание таблицы в базе данных."""
     with get_connection() as conn:
