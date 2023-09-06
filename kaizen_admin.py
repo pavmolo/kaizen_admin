@@ -68,3 +68,18 @@ st.dataframe(df)
 if st.button("Создать таблицу"):
     create_table(table_name, st.session_state.fields, primary_key)
     st.success(f"Таблица {table_name} успешно создана!")
+def view_tables_page():
+    st.title("Просмотр таблиц")
+    tables = get_tables()
+    selected_table = st.selectbox("Выберите таблицу:", tables)
+    if selected_table:
+        data = get_table_data(selected_table)
+        st.dataframe(data)
+
+# Выбор страницы
+page = st.radio("Выберите страницу:", ["Создать таблицу", "Просмотр таблиц"])
+
+if page == "Создать таблицу":
+    create_table_page()
+elif page == "Просмотр таблиц":
+    view_tables_page()
