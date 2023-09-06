@@ -7,7 +7,7 @@ import psycopg2
 DATABASE_CONFIG = {
     'dbname': 'c79908_kaizen_it_na4u_ru',
     'user': 'c79908_kaizen_it_na4u_ru',
-    'password': st.secrets["database"]["password"],  # Используем секретный пароль из secrets.toml
+    'password': 'RoWmePorvorop68' ,  # Используем секретный пароль из secrets.toml st.secrets["database"]["password"]
     'host': 'postgres.c79908.h2'
 }
 
