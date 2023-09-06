@@ -5,10 +5,10 @@ import psycopg2
 
 # Параметры подключения к базе данных
 DATABASE_CONFIG = {
-    'dbname': 'c79908_kaizen_it_na4u_ru',
-    'user': 'c79908_kaizen_it_na4u_ru',
+    'dbname': 'kaizen_it_administration_aport',
+    'user': 'pavmolo',
     'password': st.secrets["database"]["password"],  # Используем секретный пароль из secrets.toml 
-    'host': 'postgres.c79908.h2'
+    'host': '45.86.182.111'
 }
 
 def get_connection():
