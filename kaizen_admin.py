@@ -39,10 +39,15 @@ data_types = {
     "Дробное число 📊": "FLOAT"
 }
 
-# Используем st.data_editor для создания структуры таблицы
-default_data = {"Имя поля": ["поле1"], "Тип данных": ["Целое число 🔢"]}
-data = st.data_editor("Структура таблицы", pd.DataFrame(default_data))
-fields = list(zip(data["Имя поля"], [data_types[type] for type in data["Тип данных"]]))
+# Используем виджеты Streamlit для создания структуры таблицы
+field_count = st.number_input("Количество полей", min_value=1, max_value=10, value=1)
+fields = []
+
+for i in range(field_count):
+    st.subheader(f"Поле {i+1}")
+    field_name = st.text_input(f"Имя поля {i+1}", key=f"field_name_{i}")
+    field_type = st.selectbox(f"Тип поля {i+1}", list(data_types.keys()), key=f"field_type_{i}")
+    fields.append((field_name, data_types[field_type]))
 
 if st.button("Создать таблицу"):
     create_table(table_name, fields)
