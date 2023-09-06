@@ -41,7 +41,7 @@ data_types = {
 
 # Имитация таблицы
 st.write("Имитация таблицы:")
-columns = st.beta_columns(2)
+columns = st.columns(2)
 fields = []
 
 # Добавление столбцов
