@@ -23,7 +23,13 @@ def create_table(table_name, fields, primary_key):
             sql = f"CREATE TABLE {table_name} ({fields_str}, PRIMARY KEY ({primary_key}));"
             cursor.execute(sql)
             conn.commit()
-
+def view_tables_page():
+    st.title("Просмотр таблиц")
+    tables = get_tables()
+    selected_table = st.selectbox("Выберите таблицу:", tables)
+    if selected_table:
+        data = get_table_data(selected_table)
+        st.dataframe(data)
 st.title("Управление базой данных")
 def create_table_page():
     # Создание новой таблицы
