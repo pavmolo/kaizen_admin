@@ -45,10 +45,10 @@ if 'fields' not in st.session_state:
 
 # Добавление столбцов
 if st.button("Добавить столбец"):
-    field_name = st.text_input(f"Имя поля", key=f"field_name")
-    field_type = st.selectbox(f"Тип поля", list(data_types.keys()), key=f"field_type")
-    st.session_state.fields.append((field_name, data_types[field_type]))
-
+    field_name = st.text_input(f"Имя поля", key=f"field_name_{len(st.session_state.fields)}")
+    field_type = st.selectbox(f"Тип поля", list(data_types.keys()), key=f"field_type_{len(st.session_state.fields)}")
+    if field_name and field_type:
+        st.session_state.fields.append((field_name, data_types[field_type]))
 # Отображение добавленных столбцов
 for field in st.session_state.fields:
     st.write(f"{field[0]} ({field[1]})")
