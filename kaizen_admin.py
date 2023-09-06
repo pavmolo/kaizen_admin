@@ -14,7 +14,12 @@ DATABASE_CONFIG = {
 def get_connection():
     """Получение соединения с базой данных."""
     return psycopg2.connect(**DATABASE_CONFIG)
-
+def get_tables():
+    """Получение списка таблиц для указанной базы данных."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"SELECT tablename FROM pg_tables WHERE schemaname='public';")
+            return [row[0] for row in cursor.fetchall()]
 def create_table(table_name, fields, primary_key):
     """Создание таблицы в базе данных."""
     with get_connection() as conn:
