@@ -1,7 +1,7 @@
 # streamlit_app.py
 import streamlit as st
 import pandas as pd
-import psycopg2_binary as psycopg2
+import psycopg2-binary as psycopg2
 
 # Параметры подключения к базе данных
 DATABASE_CONFIG = {
