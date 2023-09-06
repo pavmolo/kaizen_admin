@@ -15,13 +15,14 @@ def get_connection():
     """Получение соединения с базой данных."""
     return psycopg2.connect(**DATABASE_CONFIG)
 
-def create_table(table_name, fields):
-    """Создание таблицы с указанными полями."""
+def create_table(table_name, fields, primary_key):
+    """Создание таблицы в базе данных."""
     with get_connection() as conn:
         with conn.cursor() as cursor:
             fields_str = ", ".join([f"{name} {type}" for name, type in fields])
-            cursor.execute(f"CREATE TABLE {table_name} ({fields_str});")
-        conn.commit()
+            sql = f"CREATE TABLE {table_name} ({fields_str}, PRIMARY KEY ({primary_key}));"
+            cursor.execute(sql)
+            conn.commit()
 
 st.title("Управление базой данных")
 
