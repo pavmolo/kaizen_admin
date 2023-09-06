@@ -7,7 +7,7 @@ import psycopg2
 DATABASE_CONFIG = {
     'dbname': 'kaizen_it_administration_aport',
     'user': 'pavmolo',
-    'password': st.secrets["database"]["password"],  # Используем секретный пароль из secrets.toml 
+    'password': 'qaporbojnfbapofnafbuar492y73jg',  # Используем секретный пароль из secrets.toml 
     'host': '45.86.182.111'
 }
 
