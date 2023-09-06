@@ -39,23 +39,28 @@ data_types = {
     "Дробное число 📊": "FLOAT"
 }
 
-# Имитация таблицы
-st.write("Имитация таблицы:")
-columns = st.columns(2)
-fields = []
+# Инициализация сессионного состояния
+if 'fields' not in st.session_state:
+    st.session_state.fields = []
 
 # Добавление столбцов
-add_column = st.button("Добавить столбец")
-if add_column:
-    field_name = columns[0].text_input(f"Имя поля", key=f"field_name")
-    field_type = columns[1].selectbox(f"Тип поля", list(data_types.keys()), key=f"field_type")
-    fields.append((field_name, data_types[field_type]))
+if st.button("Добавить столбец"):
+    field_name = st.text_input(f"Имя поля", key=f"field_name")
+    field_type = st.selectbox(f"Тип поля", list(data_types.keys()), key=f"field_type")
+    st.session_state.fields.append((field_name, data_types[field_type]))
 
-# Отображение имитации таблицы
-for field in fields:
+# Отображение добавленных столбцов
+for field in st.session_state.fields:
     st.write(f"{field[0]} ({field[1]})")
+
+# Выбор ключевого поля
+primary_key = st.selectbox("Выберите ключевое поле", [field[0] for field in st.session_state.fields])
+
+# Отображение имитации таблицы в виде датафрейма
+df = pd.DataFrame(columns=[field[0] for field in st.session_state.fields])
+st.dataframe(df)
 
 # Создание таблицы
 if st.button("Создать таблицу"):
-    create_table(table_name, fields)
+    create_table(table_name, st.session_state.fields, primary_key)
     st.success(f"Таблица {table_name} успешно создана!")
