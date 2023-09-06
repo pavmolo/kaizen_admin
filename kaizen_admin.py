@@ -34,11 +34,25 @@ def create_table(table_name, fields, primary_key):
             conn.commit()
 def view_tables_page():
     st.title("Просмотр таблиц")
+
+    # Получение списка таблиц
     tables = get_tables()
     selected_table = st.selectbox("Выберите таблицу:", tables)
+
     if selected_table:
+        # Получение данных из выбранной таблицы
         data = get_table_data(selected_table)
+
+        # Предположим, что первый столбец является ключевым (вы можете изменить это, если у вас другая структура)
+        key_column = data.columns[0]
+
+        # Добавьте иконку ключа к ключевому столбцу
+        data = data.rename(columns={key_column: f"🔑 {key_column}"})
+
+        # Выведите обновленный DataFrame в Streamlit
         st.dataframe(data)
+
+
 st.title("Управление базой данных")
 def create_table_page():
     # Создание новой таблицы
