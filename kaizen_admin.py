@@ -114,6 +114,101 @@ def update_table_data(table_name, key_column, key_value, data):
             cursor.execute(sql, list(data.values()) + [key_value])
             conn.commit()
 
+
+# Интерфесные функции
+
+def create_table_interface():
+    st.subheader("Создание новой таблицы")
+    table_name = st.text_input("Название таблицы")
+    
+    if 'fields' not in st.session_state:
+        st.session_state.fields = []
+    
+    with st.form(key='add_column_form'):
+        field_name = st.text_input(f"Имя поля", key=f"field_name_{len(st.session_state.fields)}")
+        field_type = st.selectbox(f"Тип поля", list(data_types.keys()), key=f"field_type_{len(st.session_state.fields)}")
+        add_column_button = st.form_submit_button(label='Добавить столбец')
+    
+    if add_column_button:
+        if field_name and field_type:
+            st.session_state.fields.append((field_name, data_types[field_type]))
+    
+    for field in st.session_state.fields:
+        st.write(f"{field[0]} ({field[1]})")
+    
+    primary_key = st.selectbox("Выберите ключевое поле", [field[0] for field in st.session_state.fields])
+    
+    if st.button("Создать таблицу"):
+        if table_name and st.session_state.fields:
+            create_table(table_name, st.session_state.fields, primary_key)
+            st.success(f"Таблица {table_name} успешно создана!")
+            st.session_state.fields = []
+
+def add_column_interface():
+    st.subheader("Добавление нового поля в существующую таблицу")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    column_name = st.text_input("Имя нового поля")
+    column_type = st.selectbox("Тип поля", list(data_types.keys()))
+    if st.button("Добавить поле"):
+        add_column_to_table(table_name, column_name, data_types[column_type])
+        st.success(f"Поле {column_name} успешно добавлено в таблицу {table_name}!")
+
+def modify_table_interface():
+    st.subheader("Изменение структуры таблицы")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    action = st.radio("Выберите действие", ["Изменить тип данных", "Переименовать столбец"])
+    
+    if action == "Изменить тип данных":
+        column_name = st.selectbox("Выберите столбец", get_table_columns(table_name))
+        new_type = st.selectbox("Выберите новый тип данных", list(data_types.keys()))
+        if st.button("Применить"):
+            change_column_type(table_name, column_name, data_types[new_type])
+            st.success(f"Тип данных для {column_name} изменен на {new_type}!")
+    
+    elif action == "Переименовать столбец":
+        old_name = st.selectbox("Выберите столбец", get_table_columns(table_name))
+        new_name = st.text_input("Введите новое имя столбца")
+        if st.button("Применить"):
+            rename_column(table_name, old_name, new_name)
+            st.success(f"Столбец {old_name} переименован в {new_name}!")
+
+def add_row_interface():
+    st.subheader("Добавление новой строки в таблицу")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    columns = get_table_columns(table_name)
+    data_dict = {}
+    for col in columns:
+        data_dict[col] = st.text_input(f"Введите значение для {col}")
+    if st.button("Добавить строку"):
+        if all(value for value in data_dict.values()):
+            success = insert_into_table(table_name, data_dict)
+            if success:
+                st.success(f"Строка успешно добавлена в таблицу {table_name}!")
+        else:
+            st.warning("Пожалуйста, заполните все поля перед сохранением.")
+
+def view_table_interface():
+    st.subheader("Просмотр содержимого таблицы")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    data = get_table_data(table_name)
+    st.dataframe(data)
+
+def update_row_interface():
+    st.subheader("Изменение существующих записей")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    key_column = get_primary_key(table_name)
+    key_value = st.selectbox(f"Выберите значение ключевого поля ({key_column}) для изменения", get_unique_values(table_name, key_column))
+    if key_value:
+        data = get_row_data(table_name, key_column, key_value)
+        for column in data.keys():
+            data[column] = st.text_input(f"Значение для {column}", data[column])
+        if st.button("Обновить запись"):
+            update_table_data(table_name, key_column, key_value, data)
+            st.success(f"Запись с {key_column} = {key_value} успешно обновлена!")
+
+# Вывод интерфейса
+
+
 def main_interface():
     st.title("Управление базой данных")
     page = st.radio("Выберите действие", ["Создать таблицу", "Добавить поле", "Изменить поля", "Добавить строку", "Просмотр таблицы", "Изменить строку", "Удалить строку", "Удалить таблицу"])
