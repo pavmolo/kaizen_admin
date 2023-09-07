@@ -358,6 +358,13 @@ def delete_column_interface():
         st.success(f"Столбец {column_name} успешно удален из таблицы {table_name}!")
 
 # Интерфейс для удаления таблицы
+
+def drop_table(table_name):
+    """Удаление таблицы из базы данных."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"DROP TABLE {table_name};")
+            conn.commit()
 def delete_table_interface():
     st.subheader("Удаление таблицы")
     table_name = st.selectbox("Выберите таблицу для удаления", get_tables())
@@ -382,31 +389,52 @@ def main_interface():
     
     st.sidebar.header("Операции")
     
+    # Инициализация session_state для текущего выбранного действия, если оно ещё не было установлено
+    if "current_action" not in st.session_state:
+        st.session_state.current_action = ""
+
+    # Устанавливаем действие в session_state при нажатии на соответствующую кнопку
     if st.sidebar.button("Создать таблицу"):
-        create_table_interface()
+        st.session_state.current_action = "create_table"
     if st.sidebar.button("Создать поле"):
-        add_column_interface()
+        st.session_state.current_action = "add_column"
     if st.sidebar.button("Создать строку"):
-        add_row_interface()
-    
-    st.sidebar.subheader("Изменить")
+        st.session_state.current_action = "add_row"
     if st.sidebar.button("Изменить таблицу"):
-        rename_table_interface()
+        st.session_state.current_action = "rename_table"
     if st.sidebar.button("Изменить поле"):
-        modify_table_interface()
+        st.session_state.current_action = "modify_table"
     if st.sidebar.button("Изменить строку"):
-        update_row_interface()
-    
-    st.sidebar.subheader("Удалить")
+        st.session_state.current_action = "update_row"
     if st.sidebar.button("Удалить таблицу"):
-        delete_table_interface()
+        st.session_state.current_action = "delete_table"
     if st.sidebar.button("Удалить поле"):
-        delete_column_interface()
+        st.session_state.current_action = "delete_column"
     if st.sidebar.button("Удалить строку"):
-        delete_row_interface()
-    
-    st.sidebar.subheader("Просмотр")
+        st.session_state.current_action = "delete_row"
     if st.sidebar.button("Просмотр таблицы"):
+        st.session_state.current_action = "view_tables"
+    
+    # Вызываем соответствующую функцию интерфейса на основе текущего выбранного действия
+    if st.session_state.current_action == "create_table":
+        create_table_interface()
+    elif st.session_state.current_action == "add_column":
+        add_column_interface()
+    elif st.session_state.current_action == "add_row":
+        add_row_interface()
+    elif st.session_state.current_action == "rename_table":
+        rename_table_interface()
+    elif st.session_state.current_action == "modify_table":
+        modify_table_interface()
+    elif st.session_state.current_action == "update_row":
+        update_row_interface()
+    elif st.session_state.current_action == "delete_table":
+        delete_table_interface()
+    elif st.session_state.current_action == "delete_column":
+        delete_column_interface()
+    elif st.session_state.current_action == "delete_row":
+        delete_row_interface()
+    elif st.session_state.current_action == "view_tables":
         view_tables_page()
 
 
