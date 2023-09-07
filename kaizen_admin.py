@@ -399,7 +399,7 @@ def main_interface():
     
     st.sidebar.subheader("Просмотр")
     if st.sidebar.button("Просмотр таблицы"):
-        view_table_interface()
+        view_tables_page()
 
 
 if __name__ == "__main__":
