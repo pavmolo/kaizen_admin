@@ -267,9 +267,9 @@ def add_row_interface():
             # Если это внешний ключ, предоставьте выпадающий список с допустимыми значениями
             ref_primary_key = get_primary_key(referenced_table)
             possible_values = get_unique_values(referenced_table, ref_primary_key)
-            data_dict[col] = st.selectbox(f"Выберите значение для {col}", possible_values)
+            data_dict[col] = st.selectbox(f"{col}", possible_values)
         else:
-            data_dict[col] = st.text_input(f"Введите значение для {col}")
+            data_dict[col] = st.text_input(f"{col}")
     
     if st.button("Добавить строку"):
         if all(value for value in data_dict.values()):  # Проверка, что все поля заполнены
@@ -301,15 +301,16 @@ def update_row_interface():
             referenced_table = get_referenced_table(table_name, column)
             if referenced_table:
                 # Если столбец является внешним ключом, предоставьте выпадающий список с уникальными значениями
-                data[column] = st.selectbox(f"Выберите значение для {column}", get_unique_values(referenced_table, get_primary_key(referenced_table)), index=get_unique_values(referenced_table, get_primary_key(referenced_table)).index(data[column]))
+                ref_primary_key = get_primary_key(referenced_table)
+                possible_values = get_unique_values(referenced_table, ref_primary_key)
+                data[column] = st.selectbox(f"{column}", possible_values, index=possible_values.index(data[column]))
             else:
-                data[column] = st.text_input(f"Значение для {column}", data[column])
+                data[column] = st.text_input(f"{column}", data[column])
         
         # Шаг 3: Сохранение изменений
         if st.button("Обновить запись"):
             update_table_data(table_name, key_column, key_value, data)
             st.success(f"Запись с {key_column} = {key_value} успешно обновлена!")
-
 
 # Вывод интерфейса
 
