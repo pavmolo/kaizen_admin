@@ -275,7 +275,7 @@ def main_interface():
     elif page == "Добавить строку":
         add_row_interface()
     elif page == "Просмотр таблицы":
-        view_table_interface()
+        view_tables_page()
     elif page == "Изменить строку":
         update_row_interface()
     elif page == "Удалить строку":
