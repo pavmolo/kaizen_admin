@@ -131,10 +131,14 @@ def add_row_interface():
     edited_data = st.data_editor("Добавьте новую строку", empty_df)
     
     if st.button("Добавить строку"):
-        # Преобразование edited_data в словарь и добавление в таблицу
-        data_dict = edited_data.iloc[0].to_dict()
-        insert_into_table(table_name, data_dict)
-        st.success(f"Строка успешно добавлена в таблицу {table_name}!")
+        if not edited_data.empty:  # Проверка, что данные были добавлены
+            # Преобразование edited_data в словарь и добавление в таблицу
+            data_dict = edited_data.iloc[0].to_dict()
+            insert_into_table(table_name, data_dict)
+            st.success(f"Строка успешно добавлена в таблицу {table_name}!")
+        else:
+            st.warning("Пожалуйста, добавьте данные перед сохранением.")
+
 
 
 # Интерфейс для просмотра содержимого таблицы
