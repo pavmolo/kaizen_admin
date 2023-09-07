@@ -58,7 +58,7 @@ def get_referenced_table(table_name, column_name):
                 FROM information_schema.table_constraints AS tc 
                 JOIN information_schema.constraint_column_usage AS ccu
                 ON tc.constraint_name = ccu.constraint_name
-                WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name='{table_name}' AND tc.column_name='{column_name}';
+                WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name='{table_name}' AND ccu.column_name = '{column_name}';
             """)
             result = cursor.fetchone()
             return result[0] if result else None
