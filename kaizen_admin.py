@@ -124,21 +124,18 @@ def add_row_interface():
     # Получение столбцов таблицы
     columns = get_table_columns(table_name)
     
-    # Создание пустого DataFrame с нужными столбцами
-    empty_df = pd.DataFrame(columns=columns)
+    # Словарь для хранения введенных данных
+    data_dict = {}
     
-    # Использование st.data_editor для редактирования данных
-    edited_data = st.data_editor("Добавьте новую строку", empty_df)
+    for col in columns:
+        data_dict[col] = st.text_input(f"Введите значение для {col}")
     
     if st.button("Добавить строку"):
-        if not edited_data.empty:  # Проверка, что данные были добавлены
-            # Преобразование edited_data в словарь и добавление в таблицу
-            data_dict = edited_data.iloc[0].to_dict()
+        if all(value for value in data_dict.values()):  # Проверка, что все поля заполнены
             insert_into_table(table_name, data_dict)
             st.success(f"Строка успешно добавлена в таблицу {table_name}!")
         else:
-            st.warning("Пожалуйста, добавьте данные перед сохранением.")
-
+            st.warning("Пожалуйста, заполните все поля перед сохранением.")
 
 
 # Интерфейс для просмотра содержимого таблицы
