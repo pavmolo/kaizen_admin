@@ -380,18 +380,32 @@ def rename_table_interface():
         rename_table(old_name, new_name)
         st.success(f"Таблица {old_name} успешно переименована в {new_name}!")
         
-# Интерфейс для удаления строки из таблицы
-
-
+def delete_rows_from_table(table_name, rows_to_delete):
+    """Удаление строк из таблицы."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            for row in rows_to_delete:
+                cursor.execute(f"DELETE FROM {table_name} WHERE your_primary_key_column = %s;", (row,))
+            conn.commit()
 
 def delete_row_interface():
-    st.subheader("Удаление строки из таблицы")
-    table_name = st.selectbox("Выберите таблицу", get_tables())
-    key_column = get_primary_key(table_name)
-    key_value = st.text_input(f"Введите значение ключевого поля ({key_column}) для удаления")
-    if st.button("Удалить строку"):
-        delete_from_table(table_name, key_column, key_value)
-        st.success(f"Строка с {key_column} = {key_value} успешно удалена!")
+    st.subheader("Удаление строк из таблицы")
+    
+    # Выбор таблицы
+    if 'selected_table' not in st.session_state:
+        st.session_state.selected_table = st.selectbox("Выберите таблицу", get_tables(), key="delete_row_table_select")
+    
+    # Если таблица выбрана, показываем строки для удаления
+    if st.session_state.selected_table:
+        primary_key = get_primary_key(st.session_state.selected_table)
+        rows = get_unique_values(st.session_state.selected_table, primary_key)
+        selected_rows = st.multiselect(f"Выберите строки для удаления из {st.session_state.selected_table}", rows, key="delete_rows_multiselect")
+        
+        if st.button("Удалить выбранные строки", key="delete_selected_rows_button"):
+            delete_rows_from_table(st.session_state.selected_table, selected_rows)
+            st.success(f"Выбранные строки успешно удалены из {st.session_state.selected_table}!")
+            del st.session_state.selected_table  # Удаляем выбранную таблицу из состояния сессии, чтобы пользователь мог выбрать другую таблицу
+
 
 # Вывод интерфейса
 
