@@ -164,6 +164,16 @@ def add_row_interface():
             st.success(f"Строка успешно добавлена в таблицу {table_name}!")
         else:
             st.warning("Пожалуйста, заполните все поля перед сохранением.")
+def insert_into_table(table_name, data_dict):
+    """Вставка данных в таблицу."""
+    columns = ", ".join(data_dict.keys())
+    values = ", ".join(["%s"] * len(data_dict))
+    sql = f"INSERT INTO {table_name} ({columns}) VALUES ({values});"
+    
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(sql, list(data_dict.values()))
+            conn.commit()
 
 
 # Интерфейс для просмотра содержимого таблицы
