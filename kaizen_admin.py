@@ -172,8 +172,12 @@ def insert_into_table(table_name, data_dict):
     
     with get_connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute(sql, list(data_dict.values()))
-            conn.commit()
+            try:
+                cursor.execute(sql, list(data_dict.values()))
+                conn.commit()
+            except psycopg2.errors.UniqueViolation:
+                conn.rollback()  # Откатываем транзакцию
+                st.error(f"Ошибка: Запись с таким ключевым значением уже существует в таблице {table_name}.")
 
 
 # Интерфейс для просмотра содержимого таблицы
