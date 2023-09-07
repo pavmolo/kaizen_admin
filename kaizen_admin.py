@@ -82,6 +82,14 @@ def get_foreign_keys(table_name):
                 WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name='{table_name}';
             """)
             return [row[0] for row in cursor.fetchall()]
+
+def get_unique_values(table_name, column_name):
+    """Получение уникальных значений из указанного столбца таблицы."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"SELECT DISTINCT {column_name} FROM {table_name};")
+            return [row[0] for row in cursor.fetchall()]
+            
 data_types = {
     "Целое число 🔢": "INTEGER",
     "Текст 🅰️": "VARCHAR",
@@ -270,8 +278,6 @@ def add_row_interface():
                 st.success(f"Строка успешно добавлена в таблицу {table_name}!")
         else:
             st.warning("Пожалуйста, заполните все поля перед сохранением.")
-
-
 
 
 def view_table_interface():
