@@ -107,6 +107,14 @@ def add_column_interface():
         add_column_to_table(table_name, column_name, column_type)
         st.success(f"Поле {column_name} успешно добавлено в таблицу {table_name}!")
 
+def get_table_columns(table_name):
+    """Получение списка столбцов для указанной таблицы."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{table_name}';")
+            return [row[0] for row in cursor.fetchall()]
+
+
 # Интерфейс для добавления новой строки в таблицу
 def add_row_interface():
     st.subheader("Добавление новой строки в таблицу")
