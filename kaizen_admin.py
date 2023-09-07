@@ -81,6 +81,38 @@ data_types = {
     "Дробное число 📊": "FLOAT"
 }
 
+def change_column_type(table_name, column_name, new_type):
+    """Изменение типа данных столбца."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"ALTER TABLE {table_name} ALTER COLUMN {column_name} TYPE {new_type};")
+            conn.commit()
+
+def rename_column(table_name, old_name, new_name):
+    """Переименование столбца."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"ALTER TABLE {table_name} RENAME COLUMN {old_name} TO {new_name};")
+            conn.commit()
+def modify_table_interface():
+    st.subheader("Изменение структуры таблицы")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    action = st.radio("Выберите действие", ["Изменить тип данных", "Переименовать столбец"])
+    
+    if action == "Изменить тип данных":
+        column_name = st.selectbox("Выберите столбец", get_table_columns(table_name))
+        new_type = st.selectbox("Выберите новый тип данных", list(data_types.keys()))
+        if st.button("Применить"):
+            change_column_type(table_name, column_name, data_types[new_type])
+            st.success(f"Тип данных для {column_name} изменен на {new_type}!")
+    
+    elif action == "Переименовать столбец":
+        old_name = st.selectbox("Выберите столбец", get_table_columns(table_name))
+        new_name = st.text_input("Введите новое имя столбца")
+        if st.button("Применить"):
+            rename_column(table_name, old_name, new_name)
+            st.success(f"Столбец {old_name} переименован в {new_name}!")
+
 
 def create_table_page():
     # Создание новой таблицы
@@ -267,6 +299,8 @@ def main_interface():
         create_table_interface()
     elif page == "Добавить поле":
         add_column_interface()
+    elif page == "Изменить поля":
+        modify_table_interface()
     elif page == "Добавить строку":
         add_row_interface()
     elif page == "Просмотр таблицы":
