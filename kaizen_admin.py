@@ -372,35 +372,35 @@ def rename_table_interface():
 def main_interface():
     st.title("Управление базой данных")
     
-    operations = [
-        "Создать таблицу", "Создать поле", "Создать строку",
-        "Изменить таблицу", "Изменить поле", "Изменить строку",
-        "Удалить таблицу", "Удалить поле", "Удалить строку",
-        "Просмотр таблицы"
-    ]
+    st.sidebar.header("Операции")
     
-    choice = st.sidebar.selectbox("Выберите действие", operations)
-    
-    if choice == "Создать таблицу":
+    if st.sidebar.button("Создать таблицу"):
         create_table_interface()
-    elif choice == "Создать поле":
+    if st.sidebar.button("Создать поле"):
         add_column_interface()
-    elif choice == "Создать строку":
+    if st.sidebar.button("Создать строку"):
         add_row_interface()
-    elif choice == "Изменить таблицу":
+    
+    st.sidebar.subheader("Изменить")
+    if st.sidebar.button("Изменить таблицу"):
         rename_table_interface()
-    elif choice == "Изменить поле":
+    if st.sidebar.button("Изменить поле"):
         modify_table_interface()
-    elif choice == "Изменить строку":
+    if st.sidebar.button("Изменить строку"):
         update_row_interface()
-    elif choice == "Удалить таблицу":
+    
+    st.sidebar.subheader("Удалить")
+    if st.sidebar.button("Удалить таблицу"):
         delete_table_interface()
-    elif choice == "Удалить поле":
+    if st.sidebar.button("Удалить поле"):
         delete_column_interface()
-    elif choice == "Удалить строку":
+    if st.sidebar.button("Удалить строку"):
         delete_row_interface()
-    elif choice == "Просмотр таблицы":
+    
+    st.sidebar.subheader("Просмотр")
+    if st.sidebar.button("Просмотр таблицы"):
         view_table_interface()
+
 
 if __name__ == "__main__":
     main_interface()
