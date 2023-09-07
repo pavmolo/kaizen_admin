@@ -104,13 +104,6 @@ def get_row_data(table_name, key_column, key_value):
             columns = [desc[0] for desc in cursor.description]
             return dict(zip(columns, row))
 
-def get_unique_values(table_name, column_name):
-    """Получение уникальных значений из столбца."""
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(f"SELECT DISTINCT {column_name} FROM {table_name};")
-            return [row[0] for row in cursor.fetchall()]
-
 def update_table_data(table_name, key_column, key_value, data):
     """Обновление данных в таблице."""
     set_clause = ", ".join([f"{column} = %s" for column in data.keys()])
@@ -121,9 +114,6 @@ def update_table_data(table_name, key_column, key_value, data):
             cursor.execute(sql, list(data.values()) + [key_value])
             conn.commit()
 
-# ... [Продолжение вашего кода]
-
-# Главный интерфейс
 def main_interface():
     st.title("Управление базой данных")
     page = st.radio("Выберите действие", ["Создать таблицу", "Добавить поле", "Изменить поля", "Добавить строку", "Просмотр таблицы", "Изменить строку", "Удалить строку", "Удалить таблицу"])
