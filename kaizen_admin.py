@@ -382,12 +382,7 @@ def rename_table_interface():
         
 # Интерфейс для удаления строки из таблицы
 
-def delete_from_table(table_name, key_column, key_value):
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            sql = f"DELETE FROM {table_name} WHERE {key_column} = %s;"
-            cursor.execute(sql, (key_value,))
-            conn.commit()
+
 
 def delete_row_interface():
     st.subheader("Удаление строки из таблицы")
