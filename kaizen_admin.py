@@ -245,7 +245,7 @@ def create_table_interface():
     
     primary_key = st.selectbox("Выберите ключевое поле", [field[0] for field in st.session_state.fields])
     
-    if if st.button("Создать таблицу", key="create_table_button"):
+    if st.button("Создать таблицу", key="create_table_button"):
         if table_name and st.session_state.fields:
             create_table(table_name, st.session_state.fields, primary_key)
             st.success(f"Таблица {table_name} успешно создана!")
