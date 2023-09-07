@@ -118,14 +118,24 @@ def get_table_columns(table_name):
 # Интерфейс для добавления новой строки в таблицу
 def add_row_interface():
     st.subheader("Добавление новой строки в таблицу")
+    
     table_name = st.selectbox("Выберите таблицу", get_tables())
+    
+    # Получение столбцов таблицы
     columns = get_table_columns(table_name)
-    data = {}
-    for column in columns:
-        data[column] = st.text_input(f"Значение для {column}")
+    
+    # Создание пустого DataFrame с нужными столбцами
+    empty_df = pd.DataFrame(columns=columns)
+    
+    # Использование st.data_editor для редактирования данных
+    edited_data = st.data_editor("Добавьте новую строку", empty_df)
+    
     if st.button("Добавить строку"):
-        insert_into_table(table_name, data)
+        # Преобразование edited_data в словарь и добавление в таблицу
+        data_dict = edited_data.iloc[0].to_dict()
+        insert_into_table(table_name, data_dict)
         st.success(f"Строка успешно добавлена в таблицу {table_name}!")
+
 
 # Интерфейс для просмотра содержимого таблицы
 def view_table_interface():
