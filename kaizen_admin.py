@@ -54,11 +54,11 @@ def get_referenced_table(table_name, column_name):
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(f"""
-                SELECT ccu.table_name 
-                FROM information_schema.table_constraints AS tc 
-                JOIN information_schema.constraint_column_usage AS ccu
-                ON tc.constraint_name = ccu.constraint_name
-                WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name='{table_name}' AND ccu.column_name = '{column_name}';
+                SELECT cl.relname AS referenced_table
+                FROM pg_constraint AS con
+                JOIN pg_class AS cl ON con.confrelid = cl.oid
+                JOIN pg_attribute AS att ON att.attnum = ANY(con.conkey)
+                WHERE con.conrelid = '{table_name}'::regclass AND att.attname = '{column_name}';
             """)
             result = cursor.fetchone()
             referenced_table = result[0] if result else None
