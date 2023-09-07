@@ -257,31 +257,33 @@ def add_row_interface():
     
     table_name = st.selectbox("Выберите таблицу", get_tables())
     
+    # Инициализация session_state для хранения данных формы
+    if 'form_data' not in st.session_state:
+        st.session_state.form_data = {}
+    
     # Получение столбцов таблицы
     columns = get_table_columns(table_name)
     
-    # Словарь для хранения введенных данных
-    data_dict = {}
+    with st.form(key='add_row_form'):
+        for col in columns:
+            # Проверка, является ли столбец внешним ключом
+            referenced_table = get_referenced_table(table_name, col)
+            if referenced_table:
+                # Если это внешний ключ, предоставьте выпадающий список с допустимыми значениями
+                ref_primary_key = get_primary_key(referenced_table)
+                possible_values = get_unique_values(referenced_table, ref_primary_key)
+                st.session_state.form_data[col] = st.selectbox(f"Выберите значение для {col}", possible_values, key=f"input_{col}")
+            else:
+                st.session_state.form_data[col] = st.text_input(f"Введите значение для {col}", key=f"input_{col}")
+        
+        submit_button = st.form_submit_button("Добавить строку")
     
-    for col in columns:
-        # Проверка, является ли столбец внешним ключом
-        referenced_table = get_referenced_table(table_name, col)
-        if referenced_table:
-            st.write(f"Column {col} is a foreign key referencing {referenced_table}.")  # Логирование
-            # Если это внешний ключ, предоставьте выпадающий список с допустимыми значениями
-            ref_primary_key = get_primary_key(referenced_table)
-            possible_values = get_unique_values(referenced_table, ref_primary_key)
-            data_dict[col] = st.selectbox(f"{col}", possible_values)
-        else:
-            data_dict[col] = st.text_input(f"{col}")
-    
-    if st.button("Добавить строку"):
-        if all(value for value in data_dict.values()):  # Проверка, что все поля заполнены
-            success = insert_into_table(table_name, data_dict)
+    if submit_button:
+        if all(value for value in st.session_state.form_data.values()):  # Проверка, что все поля заполнены
+            success = insert_into_table(table_name, st.session_state.form_data)
             if success:
                 st.success(f"Строка успешно добавлена в таблицу {table_name}!")
-        else:
-            st.warning("Пожалуйста, заполните все поля перед сохранением.")
+            st.session_state.form_data = {}  # Очистка данных формы после отправки
 
 
 def view_table_interface():
