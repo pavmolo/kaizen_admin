@@ -108,11 +108,11 @@ DATA_TYPE_TO_ICON = {
 }
 # Словарь, устанавливающий соответствие между типами данных и функциями ввода Streamlit
 DATA_TYPE_TO_INPUT = {
-    "TEXT": st.text_input,
+    "INTEGER": lambda label, value=None: st.number_input(label, value=value, format="%d"),
     "VARCHAR": st.text_input,
+    "TEXT": st.text_area,
     "DATE": st.date_input,
-    "FLOAT": st.number_input,
-    "INTEGER": st.number_input
+    "FLOAT": lambda label, value=None: st.number_input(label, value=value)
 }
 
 def change_column_type(table_name, column_name, new_type):
