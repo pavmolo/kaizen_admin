@@ -64,6 +64,19 @@ def get_referenced_table(table_name, column_name):
             referenced_table = result[0] if result else None
             return referenced_table
 
+def delete_column_from_table(table_name, column_name):
+    """Удаление столбца из таблицы."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"ALTER TABLE {table_name} DROP COLUMN {column_name};")
+            conn.commit()
+
+def rename_table(old_name, new_name):
+    """Переименование таблицы."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"ALTER TABLE {old_name} RENAME TO {new_name};")
+            conn.commit()
 
 def add_foreign_key(table_name, column_name, reference_table, reference_column):
     """Добавление внешнего ключа к столбцу."""
@@ -336,6 +349,21 @@ def update_row_interface():
                 update_table_data(table_name, key_column, key_value, data)
                 st.success(f"Запись с {key_column} = {key_value} успешно обновлена!")
 
+def delete_column_interface():
+    st.subheader("Удаление поля из таблицы")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    column_name = st.selectbox("Выберите столбец для удаления", get_table_columns(table_name))
+    if st.button("Удалить столбец"):
+        delete_column_from_table(table_name, column_name)
+        st.success(f"Столбец {column_name} успешно удален из таблицы {table_name}!")
+        
+def rename_table_interface():
+    st.subheader("Переименование таблицы")
+    old_name = st.selectbox("Выберите таблицу для переименования", get_tables())
+    new_name = st.text_input("Введите новое имя для таблицы")
+    if st.button("Переименовать таблицу"):
+        rename_table(old_name, new_name)
+        st.success(f"Таблица {old_name} успешно переименована в {new_name}!")
 
 
 # Вывод интерфейса
@@ -343,23 +371,36 @@ def update_row_interface():
 
 def main_interface():
     st.title("Управление базой данных")
-    page = st.radio("Выберите действие", ["Создать таблицу", "Добавить поле", "Изменить поля", "Добавить строку", "Просмотр таблицы", "Изменить строку", "Удалить строку", "Удалить таблицу"])
-    if page == "Создать таблицу":
+    
+    operations = [
+        "Создать таблицу", "Создать поле", "Создать строку",
+        "Изменить таблицу", "Изменить поле", "Изменить строку",
+        "Удалить таблицу", "Удалить поле", "Удалить строку",
+        "Просмотр таблицы"
+    ]
+    
+    choice = st.sidebar.selectbox("Выберите действие", operations)
+    
+    if choice == "Создать таблицу":
         create_table_interface()
-    elif page == "Добавить поле":
+    elif choice == "Создать поле":
         add_column_interface()
-    elif page == "Изменить поля":
-        modify_table_interface()
-    elif page == "Добавить строку":
+    elif choice == "Создать строку":
         add_row_interface()
-    elif page == "Просмотр таблицы":
-        view_tables_page()
-    elif page == "Изменить строку":
+    elif choice == "Изменить таблицу":
+        rename_table_interface()
+    elif choice == "Изменить поле":
+        modify_table_interface()
+    elif choice == "Изменить строку":
         update_row_interface()
-    elif page == "Удалить строку":
-        delete_row_interface()
-    elif page == "Удалить таблицу":
+    elif choice == "Удалить таблицу":
         delete_table_interface()
+    elif choice == "Удалить поле":
+        delete_column_interface()
+    elif choice == "Удалить строку":
+        delete_row_interface()
+    elif choice == "Просмотр таблицы":
+        view_table_interface()
 
 if __name__ == "__main__":
     main_interface()
