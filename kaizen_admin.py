@@ -195,24 +195,43 @@ def view_table_interface():
 # Интерфейс для изменения существующих записей
 def update_row_interface():
     st.subheader("Изменение существующих записей")
+    
     table_name = st.selectbox("Выберите таблицу", get_tables())
     key_column = get_primary_key(table_name)
     
-    # Получение всех уникальных значений ключевого поля
-    with get_connection() as conn:
-        data = pd.read_sql(f"SELECT DISTINCT {key_column} FROM {table_name};", conn)
-    key_values = data[key_column].tolist()
+    # Получаем все уникальные значения из ключевого столбца
+    unique_values = get_unique_values(table_name, key_column)
+    selected_value = st.selectbox(f"Выберите значение из {key_column} для редактирования", unique_values)
     
-    # Выпадающий список с уникальными значениями ключевого поля
-    selected_key_value = st.selectbox(f"Выберите значение ключевого поля ({key_column}) для изменения", key_values)
+    # Загружаем данные для выбранного значения
+    data = get_row_data(table_name, key_column, selected_value)
     
-    # Загрузка данных для выбранного значения ключевого поля
-    data = get_row_data(table_name, key_column, selected_key_value)
+    # Создаем словарь для редактирования
+    edited_data = {}
     for column, value in data.items():
-        data[column] = st.text_input(f"Новое значение для {column}", value)
+        edited_data[column] = st.text_input(f"Новое значение для {column}", value)
+    
     if st.button("Обновить запись"):
-        update_table_data(table_name, key_column, selected_key_value, data)
-        st.success(f"Запись с {key_column} = {selected_key_value} успешно обновлена!")
+        update_table_data(table_name, key_column, selected_value, edited_data)
+        st.success(f"Запись с {key_column} = {selected_value} успешно обновлена!")
+
+def get_unique_values(table_name, column_name):
+    """Получение уникальных значений из столбца."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"SELECT DISTINCT {column_name} FROM {table_name};")
+            return [row[0] for row in cursor.fetchall()]
+
+def update_table_data(table_name, key_column, key_value, data):
+    """Обновление данных в таблице."""
+    set_clause = ", ".join([f"{column} = %s" for column in data.keys()])
+    sql = f"UPDATE {table_name} SET {set_clause} WHERE {key_column} = %s;"
+    
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(sql, list(data.values()) + [key_value])
+            conn.commit()
+
 
 
 # Интерфейс для удаления строки из таблицы
