@@ -192,6 +192,15 @@ def view_table_interface():
     data = get_table_data(table_name)
     st.dataframe(data)
 
+def get_row_data(table_name, key_column, key_value):
+    """Получение данных из указанной строки таблицы на основе значения ключевого поля."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"SELECT * FROM {table_name} WHERE {key_column} = %s;", (key_value,))
+            row = cursor.fetchone()
+            columns = [desc[0] for desc in cursor.description]
+            return dict(zip(columns, row))
+
 # Интерфейс для изменения существующих записей
 def update_row_interface():
     st.subheader("Изменение существующих записей")
