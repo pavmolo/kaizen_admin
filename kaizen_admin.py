@@ -197,14 +197,23 @@ def update_row_interface():
     st.subheader("Изменение существующих записей")
     table_name = st.selectbox("Выберите таблицу", get_tables())
     key_column = get_primary_key(table_name)
-    key_value = st.text_input(f"Введите значение ключевого поля ({key_column}) для изменения")
-    if st.button(f"Загрузить данные для {key_column} = {key_value}"):
-        data = get_row_data(table_name, key_column, key_value)
-        for column, value in data.items():
-            data[column] = st.text_input(f"Новое значение для {column}", value)
-        if st.button("Обновить запись"):
-            update_table_data(table_name, key_column, key_value, data)
-            st.success(f"Запись с {key_column} = {key_value} успешно обновлена!")
+    
+    # Получение всех уникальных значений ключевого поля
+    with get_connection() as conn:
+        data = pd.read_sql(f"SELECT DISTINCT {key_column} FROM {table_name};", conn)
+    key_values = data[key_column].tolist()
+    
+    # Выпадающий список с уникальными значениями ключевого поля
+    selected_key_value = st.selectbox(f"Выберите значение ключевого поля ({key_column}) для изменения", key_values)
+    
+    # Загрузка данных для выбранного значения ключевого поля
+    data = get_row_data(table_name, key_column, selected_key_value)
+    for column, value in data.items():
+        data[column] = st.text_input(f"Новое значение для {column}", value)
+    if st.button("Обновить запись"):
+        update_table_data(table_name, key_column, selected_key_value, data)
+        st.success(f"Запись с {key_column} = {selected_key_value} успешно обновлена!")
+
 
 # Интерфейс для удаления строки из таблицы
 def delete_row_interface():
