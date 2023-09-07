@@ -55,6 +55,18 @@ def add_foreign_key(table_name, column_name, reference_table, reference_column):
             sql = f"ALTER TABLE {table_name} ADD FOREIGN KEY ({column_name}) REFERENCES {reference_table}({reference_column});"
             cursor.execute(sql)
             conn.commit()
+def get_foreign_keys(table_name):
+    """Получение списка столбцов, которые являются внешними ключами для указанной таблицы."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"""
+                SELECT kcu.column_name 
+                FROM information_schema.table_constraints AS tc 
+                JOIN information_schema.key_column_usage AS kcu
+                ON tc.constraint_name = kcu.constraint_name
+                WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name='{table_name}';
+            """)
+            return [row[0] for row in cursor.fetchall()]
 data_types = {
     "Целое число 🔢": "INTEGER",
     "Текст 🅰️": "VARCHAR",
@@ -119,7 +131,34 @@ def update_table_data(table_name, key_column, key_value, data):
         with conn.cursor() as cursor:
             cursor.execute(sql, list(data.values()) + [key_value])
             conn.commit()
+def view_tables_page():
+    st.title("Просмотр таблиц базы данных")
 
+    # Получение списка таблиц
+    tables = get_tables()
+
+    for table_name in tables:
+        st.subheader(f"Таблица: {table_name}")
+
+        # Получение данных из таблицы
+        data = get_table_data(table_name)
+
+        # Определение ключевого столбца
+        key_column = get_primary_key(table_name)
+        foreign_keys = get_foreign_keys(table_name)
+
+        # Если ключевой столбец найден, добавьте иконку ключа к нему
+        if key_column and key_column in data.columns:
+            data = data.rename(columns={key_column: f"🔑 {key_column}"})
+
+        # Добавление иконки скрепки к столбцам с внешними ключами
+        for fk in foreign_keys:
+            if fk in data.columns:
+                data = data.rename(columns={fk: f"📎 {fk}"})
+
+        # Выведите обновленный DataFrame в Streamlit
+        st.dataframe(data)
+        st.write("---")  # Разделитель между таблицами
 
 # Интерфесные функции
 
