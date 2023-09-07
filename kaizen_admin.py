@@ -160,10 +160,12 @@ def add_row_interface():
     
     if st.button("Добавить строку"):
         if all(value for value in data_dict.values()):  # Проверка, что все поля заполнены
-            insert_into_table(table_name, data_dict)
-            st.success(f"Строка успешно добавлена в таблицу {table_name}!")
+            success = insert_into_table(table_name, data_dict)
+            if success:
+                st.success(f"Строка успешно добавлена в таблицу {table_name}!")
         else:
             st.warning("Пожалуйста, заполните все поля перед сохранением.")
+
 def insert_into_table(table_name, data_dict):
     """Вставка данных в таблицу."""
     columns = ", ".join(data_dict.keys())
@@ -175,10 +177,12 @@ def insert_into_table(table_name, data_dict):
             try:
                 cursor.execute(sql, list(data_dict.values()))
                 conn.commit()
+                return True
             except psycopg2.errors.UniqueViolation:
                 conn.rollback()  # Откатываем транзакцию
                 st.error(f"Ошибка: Запись с таким ключевым значением уже существует в таблице {table_name}.")
-                return  # Прерываем выполнение функции
+                return False
+
 
 
 # Интерфейс для просмотра содержимого таблицы
