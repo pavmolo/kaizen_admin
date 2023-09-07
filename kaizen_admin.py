@@ -379,7 +379,24 @@ def rename_table_interface():
     if st.button("Переименовать таблицу"):
         rename_table(old_name, new_name)
         st.success(f"Таблица {old_name} успешно переименована в {new_name}!")
+        
+# Интерфейс для удаления строки из таблицы
 
+def delete_from_table(table_name, key_column, key_value):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            sql = f"DELETE FROM {table_name} WHERE {key_column} = %s;"
+            cursor.execute(sql, (key_value,))
+            conn.commit()
+
+def delete_row_interface():
+    st.subheader("Удаление строки из таблицы")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    key_column = get_primary_key(table_name)
+    key_value = st.text_input(f"Введите значение ключевого поля ({key_column}) для удаления")
+    if st.button("Удалить строку"):
+        delete_from_table(table_name, key_column, key_value)
+        st.success(f"Строка с {key_column} = {key_value} успешно удалена!")
 
 # Вывод интерфейса
 
