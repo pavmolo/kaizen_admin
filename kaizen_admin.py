@@ -162,7 +162,7 @@ def get_column_data_type(table_name, column_name):
         with conn.cursor() as cursor:
             cursor.execute(f"SELECT data_type FROM information_schema.columns WHERE table_name = '{table_name}' AND column_name = '{column_name}';")
             result = cursor.fetchone()
-            return result[0] if result else None
+            return result[0].upper() if result else None
 
 
 def update_table_data(table_name, key_column, key_value, data):
@@ -273,27 +273,30 @@ def add_row_interface():
     st.subheader("Добавление новой строки в таблицу")
     table_name = st.selectbox("Выберите таблицу", get_tables())
     columns = get_table_columns(table_name)
-    data_dict = {}
     
-    for col in columns:
-        col_data_type = get_column_data_type(table_name, col)
-        referenced_table = get_referenced_table(table_name, col)
+    with st.form(key='add_row_form'):
+        data_dict = {}
+        for col in columns:
+            col_data_type = get_column_data_type(table_name, col)
+            referenced_table = get_referenced_table(table_name, col)
+            
+            if referenced_table:
+                ref_primary_key = get_primary_key(referenced_table)
+                possible_values = get_unique_values(referenced_table, ref_primary_key)
+                data_dict[col] = st.selectbox(f"Выберите значение для {col}", possible_values)
+            else:
+                input_function = DATA_TYPE_TO_INPUT.get(col_data_type, st.text_input)
+                data_dict[col] = input_function(f"Введите значение для {col}")
         
-        if referenced_table:
-            ref_primary_key = get_primary_key(referenced_table)
-            possible_values = get_unique_values(referenced_table, ref_primary_key)
-            data_dict[col] = st.selectbox(f"Выберите значение для {col}", possible_values)
-        else:
-            input_function = DATA_TYPE_TO_INPUT.get(col_data_type, st.text_input)
-            data_dict[col] = input_function(f"Введите значение для {col}")
-    
-    if st.button("Добавить строку"):
-        if all(value for value in data_dict.values()):
-            success = insert_into_table(table_name, data_dict)
-            if success:
-                st.success(f"Строка успешно добавлена в таблицу {table_name}!")
-        else:
-            st.warning("Пожалуйста, заполните все поля перед сохранением.")
+        submit_button = st.form_submit_button("Добавить строку")
+        if submit_button:
+            if all(value for value in data_dict.values()):
+                success = insert_into_table(table_name, data_dict)
+                if success:
+                    st.success(f"Строка успешно добавлена в таблицу {table_name}!")
+            else:
+                st.warning("Пожалуйста, заполните все поля перед сохранением.")
+
 
 
 
@@ -311,19 +314,22 @@ def update_row_interface():
     
     if key_value:
         data = get_row_data(table_name, key_column, key_value)
-        for column in data.keys():
-            col_data_type = get_column_data_type(table_name, column)
-            referenced_table = get_referenced_table(table_name, column)
+        with st.form(key='update_row_form'):
+            for column in data.keys():
+                col_data_type = get_column_data_type(table_name, column)
+                referenced_table = get_referenced_table(table_name, column)
+                
+                if referenced_table:
+                    data[column] = st.selectbox(f"Выберите значение для {column}", get_unique_values(referenced_table, get_primary_key(referenced_table)), index=get_unique_values(referenced_table, get_primary_key(referenced_table)).index(data[column]))
+                else:
+                    input_function = DATA_TYPE_TO_INPUT.get(col_data_type, st.text_input)
+                    data[column] = input_function(f"Значение для {column}", data[column])
             
-            if referenced_table:
-                data[column] = st.selectbox(f"Выберите значение для {column}", get_unique_values(referenced_table, get_primary_key(referenced_table)), index=get_unique_values(referenced_table, get_primary_key(referenced_table)).index(data[column]))
-            else:
-                input_function = DATA_TYPE_TO_INPUT.get(col_data_type, st.text_input)
-                data[column] = input_function(f"Значение для {column}", data[column])
-        
-        if st.button("Обновить запись"):
-            update_table_data(table_name, key_column, key_value, data)
-            st.success(f"Запись с {key_column} = {key_value} успешно обновлена!")
+            submit_button = st.form_submit_button("Обновить запись")
+            if submit_button:
+                update_table_data(table_name, key_column, key_value, data)
+                st.success(f"Запись с {key_column} = {key_value} успешно обновлена!")
+
 
 # Вывод интерфейса
 
