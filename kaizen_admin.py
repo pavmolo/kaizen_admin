@@ -89,13 +89,39 @@ def create_table_page():
    # Интерфейс для создания новой таблицы
 def create_table_interface():
     st.subheader("Создание новой таблицы")
+    
     table_name = st.text_input("Имя таблицы")
-    # ... [Ваш код для добавления полей]
+    
+    # Инициализация сессионного состояния для полей
+    if 'fields' not in st.session_state:
+        st.session_state.fields = []
+    
+    # Добавление столбцов
+    with st.form(key='add_column_form'):
+        field_name = st.text_input(f"Имя поля", key=f"field_name_{len(st.session_state.fields)}")
+        field_type = st.selectbox(f"Тип поля", list(data_types.keys()), key=f"field_type_{len(st.session_state.fields)}")
+        add_column_button = st.form_submit_button(label='Добавить столбец')
+    
+    if add_column_button:
+        if field_name and field_type:
+            st.session_state.fields.append((field_name, data_types[field_type]))
+    
+    # Отображение добавленных столбцов
+    for field in st.session_state.fields:
+        st.write(f"{field[0]} ({field[1]})")
+    
+    # Выбор ключевого поля
     primary_key = st.selectbox("Выберите ключевое поле", [field[0] for field in st.session_state.fields])
-    # ... [Ваш код для отображения имитации таблицы]
+    
+    # Создание таблицы
     if st.button("Создать таблицу"):
-        create_table(table_name, st.session_state.fields, primary_key)
-        st.success(f"Таблица {table_name} успешно создана!")
+        if table_name and st.session_state.fields:
+            create_table(table_name, st.session_state.fields, primary_key)
+            st.success(f"Таблица {table_name} успешно создана!")
+            st.session_state.fields = []  # Очистка полей после создания таблицы
+        else:
+            st.warning("Пожалуйста, укажите имя таблицы и добавьте хотя бы одно поле.")
+
 
 # Интерфейс для добавления нового поля в существующую таблицу
 def add_column_interface():
