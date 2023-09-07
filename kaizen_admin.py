@@ -271,6 +271,7 @@ def add_row_interface():
             st.warning("Пожалуйста, заполните все поля перед сохранением.")
 
 
+
 def view_table_interface():
     st.subheader("Просмотр содержимого таблицы")
     table_name = st.selectbox("Выберите таблицу", get_tables())
