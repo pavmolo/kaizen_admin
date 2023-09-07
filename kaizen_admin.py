@@ -48,7 +48,13 @@ def get_primary_key(table_name):
             """)
             result = cursor.fetchone()
             return result[0] if result else None
-
+def add_foreign_key(table_name, column_name, reference_table, reference_column):
+    """Добавление внешнего ключа к столбцу."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            sql = f"ALTER TABLE {table_name} ADD FOREIGN KEY ({column_name}) REFERENCES {reference_table}({reference_column});"
+            cursor.execute(sql)
+            conn.commit()
 data_types = {
     "Целое число 🔢": "INTEGER",
     "Текст 🅰️": "VARCHAR",
@@ -156,7 +162,7 @@ def add_column_interface():
 def modify_table_interface():
     st.subheader("Изменение структуры таблицы")
     table_name = st.selectbox("Выберите таблицу", get_tables())
-    action = st.radio("Выберите действие", ["Изменить тип данных", "Переименовать столбец"])
+    action = st.radio("Выберите действие", ["Изменить тип данных", "Переименовать столбец", "Добавить внешний ключ"])
     
     if action == "Изменить тип данных":
         column_name = st.selectbox("Выберите столбец", get_table_columns(table_name))
@@ -171,6 +177,15 @@ def modify_table_interface():
         if st.button("Применить"):
             rename_column(table_name, old_name, new_name)
             st.success(f"Столбец {old_name} переименован в {new_name}!")
+
+    elif action == "Добавить внешний ключ":
+            column_name = st.selectbox("Выберите столбец для внешнего ключа", get_table_columns(table_name))
+            reference_table = st.selectbox("Выберите таблицу-источник", get_tables())
+            reference_column = st.selectbox("Выберите столбец в таблице-источнике", get_table_columns(reference_table))
+            if st.button("Добавить внешний ключ"):
+                add_foreign_key(table_name, column_name, reference_table, reference_column)
+                st.success(f"Внешний ключ для {column_name} успешно добавлен!")
+
 
 def add_row_interface():
     st.subheader("Добавление новой строки в таблицу")
