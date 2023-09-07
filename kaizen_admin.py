@@ -356,6 +356,14 @@ def delete_column_interface():
     if st.button("Удалить столбец"):
         delete_column_from_table(table_name, column_name)
         st.success(f"Столбец {column_name} успешно удален из таблицы {table_name}!")
+
+# Интерфейс для удаления таблицы
+def delete_table_interface():
+    st.subheader("Удаление таблицы")
+    table_name = st.selectbox("Выберите таблицу для удаления", get_tables())
+    if st.button(f"Удалить таблицу {table_name}?"):
+        drop_table(table_name)
+        st.success(f"Таблица {table_name} успешно удалена!")
         
 def rename_table_interface():
     st.subheader("Переименование таблицы")
