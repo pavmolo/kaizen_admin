@@ -62,7 +62,6 @@ def get_referenced_table(table_name, column_name):
             """)
             result = cursor.fetchone()
             referenced_table = result[0] if result else None
-            st.write(f"Referenced table for {table_name}.{column_name}: {referenced_table}")  # Логирование
             return referenced_table
 
 
@@ -300,24 +299,30 @@ def update_row_interface():
     # Шаг 1: Выбор строки для редактирования
     key_value = st.selectbox(f"Выберите значение ключевого поля ({key_column}) для изменения", get_unique_values(table_name, key_column))
     
+    # Инициализация session_state для хранения данных формы
+    if 'update_form_data' not in st.session_state:
+        st.session_state.update_form_data = get_row_data(table_name, key_column, key_value) if key_value else {}
+    
     # Шаг 2: Отображение полей для редактирования
     if key_value:
-        data = get_row_data(table_name, key_column, key_value)
-        for column in data.keys():
-            referenced_table = get_referenced_table(table_name, column)
-            if referenced_table:
-                st.write(f"Column {column} is a foreign key referencing {referenced_table}.")  # Логирование
-                # Если столбец является внешним ключом, предоставьте выпадающий список с уникальными значениями
-                ref_primary_key = get_primary_key(referenced_table)
-                possible_values = get_unique_values(referenced_table, ref_primary_key)
-                data[column] = st.selectbox(f"{column}", possible_values, index=possible_values.index(data[column]))
-            else:
-                data[column] = st.text_input(f"{column}", data[column])
+        with st.form(key='update_row_form'):
+            for column, value in st.session_state.update_form_data.items():
+                referenced_table = get_referenced_table(table_name, column)
+                if referenced_table:
+                    # Если столбец является внешним ключом, предоставьте выпадающий список с уникальными значениями
+                    ref_primary_key = get_primary_key(referenced_table)
+                    possible_values = get_unique_values(referenced_table, ref_primary_key)
+                    st.session_state.update_form_data[column] = st.selectbox(f"Выберите значение для {column}", possible_values, index=possible_values.index(value), key=f"update_input_{column}")
+                else:
+                    st.session_state.update_form_data[column] = st.text_input(f"Значение для {column}", value, key=f"update_input_{column}")
+            
+            submit_button = st.form_submit_button("Обновить запись")
         
         # Шаг 3: Сохранение изменений
-        if st.button("Обновить запись"):
-            update_table_data(table_name, key_column, key_value, data)
+        if submit_button:
+            update_table_data(table_name, key_column, key_value, st.session_state.update_form_data)
             st.success(f"Запись с {key_column} = {key_value} успешно обновлена!")
+            st.session_state.update_form_data = {}  # Очистка данных формы после отправки
 
 # Вывод интерфейса
 
