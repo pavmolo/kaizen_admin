@@ -257,7 +257,8 @@ def add_row_interface():
         referenced_table = get_referenced_table(table_name, col)
         if referenced_table:
             # Если это внешний ключ, предоставьте выпадающий список с допустимыми значениями
-            possible_values = get_unique_values(referenced_table, get_primary_key(referenced_table))
+            ref_primary_key = get_primary_key(referenced_table)
+            possible_values = get_unique_values(referenced_table, ref_primary_key)
             data_dict[col] = st.selectbox(f"Выберите значение для {col}", possible_values)
         else:
             data_dict[col] = st.text_input(f"Введите значение для {col}")
@@ -269,6 +270,7 @@ def add_row_interface():
                 st.success(f"Строка успешно добавлена в таблицу {table_name}!")
         else:
             st.warning("Пожалуйста, заполните все поля перед сохранением.")
+
 
 
 
