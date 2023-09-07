@@ -61,7 +61,10 @@ def get_referenced_table(table_name, column_name):
                 WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name='{table_name}' AND ccu.column_name = '{column_name}';
             """)
             result = cursor.fetchone()
-            return result[0] if result else None
+            referenced_table = result[0] if result else None
+            st.write(f"Referenced table for {table_name}.{column_name}: {referenced_table}")  # Логирование
+            return referenced_table
+
 
 def add_foreign_key(table_name, column_name, reference_table, reference_column):
     """Добавление внешнего ключа к столбцу."""
@@ -264,6 +267,7 @@ def add_row_interface():
         # Проверка, является ли столбец внешним ключом
         referenced_table = get_referenced_table(table_name, col)
         if referenced_table:
+            st.write(f"Column {col} is a foreign key referencing {referenced_table}.")  # Логирование
             # Если это внешний ключ, предоставьте выпадающий список с допустимыми значениями
             ref_primary_key = get_primary_key(referenced_table)
             possible_values = get_unique_values(referenced_table, ref_primary_key)
@@ -300,6 +304,7 @@ def update_row_interface():
         for column in data.keys():
             referenced_table = get_referenced_table(table_name, column)
             if referenced_table:
+                st.write(f"Column {column} is a foreign key referencing {referenced_table}.")  # Логирование
                 # Если столбец является внешним ключом, предоставьте выпадающий список с уникальными значениями
                 ref_primary_key = get_primary_key(referenced_table)
                 possible_values = get_unique_values(referenced_table, ref_primary_key)
