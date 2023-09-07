@@ -253,10 +253,12 @@ def add_row_interface():
     data_dict = {}
     
     for col in columns:
+        # Проверка, является ли столбец внешним ключом
         referenced_table = get_referenced_table(table_name, col)
         if referenced_table:
-            # Если столбец является внешним ключом, предоставьте выпадающий список с уникальными значениями
-            data_dict[col] = st.selectbox(f"Выберите значение для {col}", get_unique_values(referenced_table, get_primary_key(referenced_table)))
+            # Если это внешний ключ, предоставьте выпадающий список с допустимыми значениями
+            possible_values = get_unique_values(referenced_table, get_primary_key(referenced_table))
+            data_dict[col] = st.selectbox(f"Выберите значение для {col}", possible_values)
         else:
             data_dict[col] = st.text_input(f"Введите значение для {col}")
     
@@ -267,6 +269,7 @@ def add_row_interface():
                 st.success(f"Строка успешно добавлена в таблицу {table_name}!")
         else:
             st.warning("Пожалуйста, заполните все поля перед сохранением.")
+
 
 def view_table_interface():
     st.subheader("Просмотр содержимого таблицы")
