@@ -48,6 +48,21 @@ def get_primary_key(table_name):
             """)
             result = cursor.fetchone()
             return result[0] if result else None
+
+def get_referenced_table(table_name, column_name):
+    """Получение таблицы, на которую ссылается внешний ключ."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"""
+                SELECT ccu.table_name 
+                FROM information_schema.table_constraints AS tc 
+                JOIN information_schema.constraint_column_usage AS ccu
+                ON tc.constraint_name = ccu.constraint_name
+                WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name='{table_name}' AND tc.column_name='{column_name}';
+            """)
+            result = cursor.fetchone()
+            return result[0] if result else None
+
 def add_foreign_key(table_name, column_name, reference_table, reference_column):
     """Добавление внешнего ключа к столбцу."""
     with get_connection() as conn:
@@ -228,13 +243,25 @@ def modify_table_interface():
 
 def add_row_interface():
     st.subheader("Добавление новой строки в таблицу")
+    
     table_name = st.selectbox("Выберите таблицу", get_tables())
+    
+    # Получение столбцов таблицы
     columns = get_table_columns(table_name)
+    
+    # Словарь для хранения введенных данных
     data_dict = {}
+    
     for col in columns:
-        data_dict[col] = st.text_input(f"Введите значение для {col}")
+        referenced_table = get_referenced_table(table_name, col)
+        if referenced_table:
+            # Если столбец является внешним ключом, предоставьте выпадающий список с уникальными значениями
+            data_dict[col] = st.selectbox(f"Выберите значение для {col}", get_unique_values(referenced_table, get_primary_key(referenced_table)))
+        else:
+            data_dict[col] = st.text_input(f"Введите значение для {col}")
+    
     if st.button("Добавить строку"):
-        if all(value for value in data_dict.values()):
+        if all(value for value in data_dict.values()):  # Проверка, что все поля заполнены
             success = insert_into_table(table_name, data_dict)
             if success:
                 st.success(f"Строка успешно добавлена в таблицу {table_name}!")
@@ -251,14 +278,26 @@ def update_row_interface():
     st.subheader("Изменение существующих записей")
     table_name = st.selectbox("Выберите таблицу", get_tables())
     key_column = get_primary_key(table_name)
+    
+    # Шаг 1: Выбор строки для редактирования
     key_value = st.selectbox(f"Выберите значение ключевого поля ({key_column}) для изменения", get_unique_values(table_name, key_column))
+    
+    # Шаг 2: Отображение полей для редактирования
     if key_value:
         data = get_row_data(table_name, key_column, key_value)
         for column in data.keys():
-            data[column] = st.text_input(f"Значение для {column}", data[column])
+            referenced_table = get_referenced_table(table_name, column)
+            if referenced_table:
+                # Если столбец является внешним ключом, предоставьте выпадающий список с уникальными значениями
+                data[column] = st.selectbox(f"Выберите значение для {column}", get_unique_values(referenced_table, get_primary_key(referenced_table)), index=get_unique_values(referenced_table, get_primary_key(referenced_table)).index(data[column]))
+            else:
+                data[column] = st.text_input(f"Значение для {column}", data[column])
+        
+        # Шаг 3: Сохранение изменений
         if st.button("Обновить запись"):
             update_table_data(table_name, key_column, key_value, data)
             st.success(f"Запись с {key_column} = {key_value} успешно обновлена!")
+
 
 # Вывод интерфейса
 
