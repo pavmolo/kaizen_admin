@@ -100,6 +100,15 @@ data_types = {
     "Дробное число 📊": "FLOAT"
 }
 
+# Словарь, устанавливающий соответствие между типами данных и функциями ввода Streamlit
+DATA_TYPE_TO_INPUT = {
+    "TEXT": st.text_input,
+    "VARCHAR": st.text_input,
+    "DATE": st.date_input,
+    "FLOAT": st.number_input,
+    "INTEGER": st.number_input
+}
+
 def change_column_type(table_name, column_name, new_type):
     """Изменение типа данных столбца."""
     with get_connection() as conn:
@@ -146,6 +155,15 @@ def get_row_data(table_name, key_column, key_value):
             row = cursor.fetchone()
             columns = [desc[0] for desc in cursor.description]
             return dict(zip(columns, row))
+
+def get_column_data_type(table_name, column_name):
+    """Получение типа данных для указанного столбца."""
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"SELECT data_type FROM information_schema.columns WHERE table_name = '{table_name}' AND column_name = '{column_name}';")
+            result = cursor.fetchone()
+            return result[0] if result else None
+
 
 def update_table_data(table_name, key_column, key_value, data):
     """Обновление данных в таблице."""
@@ -253,36 +271,30 @@ def modify_table_interface():
 
 def add_row_interface():
     st.subheader("Добавление новой строки в таблицу")
-    
     table_name = st.selectbox("Выберите таблицу", get_tables())
-    
-    # Инициализация session_state для хранения данных формы
-    if 'form_data' not in st.session_state:
-        st.session_state.form_data = {}
-    
-    # Получение столбцов таблицы
     columns = get_table_columns(table_name)
+    data_dict = {}
     
-    with st.form(key='add_row_form'):
-        for col in columns:
-            # Проверка, является ли столбец внешним ключом
-            referenced_table = get_referenced_table(table_name, col)
-            if referenced_table:
-                # Если это внешний ключ, предоставьте выпадающий список с допустимыми значениями
-                ref_primary_key = get_primary_key(referenced_table)
-                possible_values = get_unique_values(referenced_table, ref_primary_key)
-                st.session_state.form_data[col] = st.selectbox(f"Выберите значение для {col}", possible_values, key=f"input_{col}")
-            else:
-                st.session_state.form_data[col] = st.text_input(f"Введите значение для {col}", key=f"input_{col}")
+    for col in columns:
+        col_data_type = get_column_data_type(table_name, col)
+        referenced_table = get_referenced_table(table_name, col)
         
-        submit_button = st.form_submit_button("Добавить строку")
+        if referenced_table:
+            ref_primary_key = get_primary_key(referenced_table)
+            possible_values = get_unique_values(referenced_table, ref_primary_key)
+            data_dict[col] = st.selectbox(f"Выберите значение для {col}", possible_values)
+        else:
+            input_function = DATA_TYPE_TO_INPUT.get(col_data_type, st.text_input)
+            data_dict[col] = input_function(f"Введите значение для {col}")
     
-    if submit_button:
-        if all(value for value in st.session_state.form_data.values()):  # Проверка, что все поля заполнены
-            success = insert_into_table(table_name, st.session_state.form_data)
+    if st.button("Добавить строку"):
+        if all(value for value in data_dict.values()):
+            success = insert_into_table(table_name, data_dict)
             if success:
                 st.success(f"Строка успешно добавлена в таблицу {table_name}!")
-            st.session_state.form_data = {}  # Очистка данных формы после отправки
+        else:
+            st.warning("Пожалуйста, заполните все поля перед сохранением.")
+
 
 
 def view_table_interface():
@@ -295,34 +307,23 @@ def update_row_interface():
     st.subheader("Изменение существующих записей")
     table_name = st.selectbox("Выберите таблицу", get_tables())
     key_column = get_primary_key(table_name)
-    
-    # Шаг 1: Выбор строки для редактирования
     key_value = st.selectbox(f"Выберите значение ключевого поля ({key_column}) для изменения", get_unique_values(table_name, key_column))
     
-    # Инициализация session_state для хранения данных формы
-    if 'update_form_data' not in st.session_state:
-        st.session_state.update_form_data = get_row_data(table_name, key_column, key_value) if key_value else {}
-    
-    # Шаг 2: Отображение полей для редактирования
     if key_value:
-        with st.form(key='update_row_form'):
-            for column, value in st.session_state.update_form_data.items():
-                referenced_table = get_referenced_table(table_name, column)
-                if referenced_table:
-                    # Если столбец является внешним ключом, предоставьте выпадающий список с уникальными значениями
-                    ref_primary_key = get_primary_key(referenced_table)
-                    possible_values = get_unique_values(referenced_table, ref_primary_key)
-                    st.session_state.update_form_data[column] = st.selectbox(f"Выберите значение для {column}", possible_values, index=possible_values.index(value), key=f"update_input_{column}")
-                else:
-                    st.session_state.update_form_data[column] = st.text_input(f"Значение для {column}", value, key=f"update_input_{column}")
+        data = get_row_data(table_name, key_column, key_value)
+        for column in data.keys():
+            col_data_type = get_column_data_type(table_name, column)
+            referenced_table = get_referenced_table(table_name, column)
             
-            submit_button = st.form_submit_button("Обновить запись")
+            if referenced_table:
+                data[column] = st.selectbox(f"Выберите значение для {column}", get_unique_values(referenced_table, get_primary_key(referenced_table)), index=get_unique_values(referenced_table, get_primary_key(referenced_table)).index(data[column]))
+            else:
+                input_function = DATA_TYPE_TO_INPUT.get(col_data_type, st.text_input)
+                data[column] = input_function(f"Значение для {column}", data[column])
         
-        # Шаг 3: Сохранение изменений
-        if submit_button:
-            update_table_data(table_name, key_column, key_value, st.session_state.update_form_data)
+        if st.button("Обновить запись"):
+            update_table_data(table_name, key_column, key_value, data)
             st.success(f"Запись с {key_column} = {key_value} успешно обновлена!")
-            st.session_state.update_form_data = {}  # Очистка данных формы после отправки
 
 # Вывод интерфейса
 
