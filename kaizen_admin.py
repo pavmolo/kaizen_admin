@@ -195,25 +195,23 @@ def view_table_interface():
 # Интерфейс для изменения существующих записей
 def update_row_interface():
     st.subheader("Изменение существующих записей")
-    
     table_name = st.selectbox("Выберите таблицу", get_tables())
     key_column = get_primary_key(table_name)
     
-    # Получаем все уникальные значения из ключевого столбца
-    unique_values = get_unique_values(table_name, key_column)
-    selected_value = st.selectbox(f"Выберите значение из {key_column} для редактирования", unique_values)
+    # Шаг 1: Выбор строки для редактирования
+    key_value = st.selectbox(f"Выберите значение ключевого поля ({key_column}) для изменения", get_unique_values(table_name, key_column))
     
-    # Загружаем данные для выбранного значения
-    data = get_row_data(table_name, key_column, selected_value)
-    
-    # Создаем словарь для редактирования
-    edited_data = {}
-    for column, value in data.items():
-        edited_data[column] = st.text_input(f"Новое значение для {column}", value)
-    
-    if st.button("Обновить запись"):
-        update_table_data(table_name, key_column, selected_value, edited_data)
-        st.success(f"Запись с {key_column} = {selected_value} успешно обновлена!")
+    # Шаг 2: Отображение полей для редактирования
+    if key_value:
+        data = get_row_data(table_name, key_column, key_value)
+        for column in data.keys():
+            data[column] = st.text_input(f"Значение для {column}", data[column])
+        
+        # Шаг 3: Сохранение изменений
+        if st.button("Обновить запись"):
+            update_table_data(table_name, key_column, key_value, data)
+            st.success(f"Запись с {key_column} = {key_value} успешно обновлена!")
+
 
 def get_unique_values(table_name, column_name):
     """Получение уникальных значений из столбца."""
