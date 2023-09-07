@@ -86,46 +86,96 @@ def create_table_page():
         "Дробное число 📊": "FLOAT"
     }
     
-    # Инициализация сессионного состояния
-    if 'fields' not in st.session_state:
-        st.session_state.fields = []
-    
-    # Добавление столбцов
-    with st.form(key='add_column_form'):
-        field_name = st.text_input(f"Имя поля", key=f"field_name_{len(st.session_state.fields)}")
-        field_type = st.selectbox(f"Тип поля", list(data_types.keys()), key=f"field_type_{len(st.session_state.fields)}")
-        submit_button = st.form_submit_button(label='Добавить столбец')
-    
-    if submit_button:
-        if field_name and field_type:
-            st.session_state.fields.append((field_name, data_types[field_type]))
-    # Отображение добавленных столбцов
-    for field in st.session_state.fields:
-        st.write(f"{field[0]} ({field[1]})")
-    
-    # Выбор ключевого поля
+   # Интерфейс для создания новой таблицы
+def create_table_interface():
+    st.subheader("Создание новой таблицы")
+    table_name = st.text_input("Имя таблицы")
+    # ... [Ваш код для добавления полей]
     primary_key = st.selectbox("Выберите ключевое поле", [field[0] for field in st.session_state.fields])
-    
-    # Отображение имитации таблицы в виде датафрейма
-    df = pd.DataFrame(columns=[field[0] for field in st.session_state.fields])
-    st.dataframe(df)
-    
-    # Создание таблицы
+    # ... [Ваш код для отображения имитации таблицы]
     if st.button("Создать таблицу"):
         create_table(table_name, st.session_state.fields, primary_key)
         st.success(f"Таблица {table_name} успешно создана!")
-    def view_tables_page():
-        st.title("Просмотр таблиц")
-        tables = get_tables()
-        selected_table = st.selectbox("Выберите таблицу:", tables)
-        if selected_table:
-            data = get_table_data(selected_table)
-            st.dataframe(data)
 
-# Выбор страницы
-page = st.radio("Выберите страницу:", ["Создать таблицу", "Просмотр таблиц"])
+# Интерфейс для добавления нового поля в существующую таблицу
+def add_column_interface():
+    st.subheader("Добавление нового поля в существующую таблицу")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    column_name = st.text_input("Имя нового поля")
+    column_type = st.selectbox("Тип поля", ["INTEGER", "VARCHAR", "TEXT", "DATE", "FLOAT"])
+    if st.button("Добавить поле"):
+        add_column_to_table(table_name, column_name, column_type)
+        st.success(f"Поле {column_name} успешно добавлено в таблицу {table_name}!")
 
-if page == "Создать таблицу":
-    create_table_page()
-elif page == "Просмотр таблиц":
-    view_tables_page()
+# Интерфейс для добавления новой строки в таблицу
+def add_row_interface():
+    st.subheader("Добавление новой строки в таблицу")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    columns = get_table_columns(table_name)
+    data = {}
+    for column in columns:
+        data[column] = st.text_input(f"Значение для {column}")
+    if st.button("Добавить строку"):
+        insert_into_table(table_name, data)
+        st.success(f"Строка успешно добавлена в таблицу {table_name}!")
+
+# Интерфейс для просмотра содержимого таблицы
+def view_table_interface():
+    st.subheader("Просмотр содержимого таблицы")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    data = get_table_data(table_name)
+    st.dataframe(data)
+
+# Интерфейс для изменения существующих записей
+def update_row_interface():
+    st.subheader("Изменение существующих записей")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    key_column = get_primary_key(table_name)
+    key_value = st.text_input(f"Введите значение ключевого поля ({key_column}) для изменения")
+    if st.button(f"Загрузить данные для {key_column} = {key_value}"):
+        data = get_row_data(table_name, key_column, key_value)
+        for column, value in data.items():
+            data[column] = st.text_input(f"Новое значение для {column}", value)
+        if st.button("Обновить запись"):
+            update_table_data(table_name, key_column, key_value, data)
+            st.success(f"Запись с {key_column} = {key_value} успешно обновлена!")
+
+# Интерфейс для удаления строки из таблицы
+def delete_row_interface():
+    st.subheader("Удаление строки из таблицы")
+    table_name = st.selectbox("Выберите таблицу", get_tables())
+    key_column = get_primary_key(table_name)
+    key_value = st.text_input(f"Введите значение ключевого поля ({key_column}) для удаления")
+    if st.button("Удалить строку"):
+        delete_from_table(table_name, key_column, key_value)
+        st.success(f"Строка с {key_column} = {key_value} успешно удалена!")
+
+# Интерфейс для удаления таблицы
+def delete_table_interface():
+    st.subheader("Удаление таблицы")
+    table_name = st.selectbox("Выберите таблицу для удаления", get_tables())
+    if st.button(f"Удалить таблицу {table_name}?"):
+        drop_table(table_name)
+        st.success(f"Таблица {table_name} успешно удалена!")
+
+# Главный интерфейс
+def main_interface():
+    st.title("Управление базой данных")
+    page = st.radio("Выберите действие", ["Создать таблицу", "Добавить поле", "Добавить строку", "Просмотр таблицы", "Изменить строку", "Удалить строку", "Удалить таблицу"])
+    if page == "Создать таблицу":
+        create_table_interface()
+    elif page == "Добавить поле":
+        add_column_interface()
+    elif page == "Добавить строку":
+        add_row_interface()
+    elif page == "Просмотр таблицы":
+        view_table_interface()
+    elif page == "Изменить строку":
+        update_row_interface()
+    elif page == "Удалить строку":
+        delete_row_interface()
+    elif page == "Удалить таблицу":
+        delete_table_interface()
+
+if __name__ == "__main__":
+    main_interface()
