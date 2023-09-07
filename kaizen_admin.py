@@ -178,6 +178,7 @@ def insert_into_table(table_name, data_dict):
             except psycopg2.errors.UniqueViolation:
                 conn.rollback()  # Откатываем транзакцию
                 st.error(f"Ошибка: Запись с таким ключевым значением уже существует в таблице {table_name}.")
+                return  # Прерываем выполнение функции
 
 
 # Интерфейс для просмотра содержимого таблицы
